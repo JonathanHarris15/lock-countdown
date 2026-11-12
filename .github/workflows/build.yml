@@ -2,7 +2,11 @@ name: Build APK
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -22,3 +26,13 @@ jobs:
         with:
           name: lock-countdown-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish APK to the apk branch
+        run: |
+          mkdir /tmp/out && cp app/build/outputs/apk/debug/app-debug.apk /tmp/out/LockCountdown.apk
+          cd /tmp/out
+          git init -q -b apk
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add LockCountdown.apk
+          git commit -qm "APK from ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" apk
