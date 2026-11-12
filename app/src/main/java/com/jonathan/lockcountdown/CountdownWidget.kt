@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.SystemClock
 import android.view.View
 import android.widget.RemoteViews
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * How the seconds tick without draining battery:
@@ -63,11 +65,18 @@ class CountdownWidget : AppWidgetProvider() {
                 views.setChronometer(R.id.chrono, SystemClock.elapsedRealtime(), null, false)
                 cancelAlarm(context)
             } else {
-                val totalHours = remaining / HOUR
-                val days = totalHours / 24
-                val hours = totalHours % 24
-                // Wall-clock moment when the hour count drops by one.
-                val nextBoundary = target - totalHours * HOUR
+                val zone = Countdown.TARGET.zone
+                val nowZ = Instant.ofEpochMilli(now).atZone(zone)
+                // Calendar days until May 17: same number all day, flips at midnight.
+                val days = ChronoUnit.DAYS.between(nowZ.toLocalDate(), Countdown.TARGET.toLocalDate())
+                // Clock counts down to the next 4:30 PM.
+                var nextTime = nowZ.toLocalDate().atTime(Countdown.TARGET.toLocalTime()).atZone(zone)
+                if (!nextTime.isAfter(nowZ)) nextTime = nextTime.plusDays(1)
+                val nextTimeMillis = nextTime.toInstant().toEpochMilli()
+                val hours = (nextTimeMillis - now) / HOUR
+                // Moment the hour digit drops by one.
+                val nextBoundary = nextTimeMillis - hours * HOUR
+                val midnight = nowZ.toLocalDate().plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
                 val base = SystemClock.elapsedRealtime() + (nextBoundary - now)
 
                 views.setViewVisibility(R.id.counter, View.VISIBLE)
@@ -78,7 +87,7 @@ class CountdownWidget : AppWidgetProvider() {
                 views.setChronometer(R.id.chrono, base, "%02d:%%s".format(hours), true)
                 views.setChronometerCountDown(R.id.chrono, true)
 
-                scheduleAlarm(context, nextBoundary + 250)
+                scheduleAlarm(context, minOf(nextBoundary, midnight) + 250)
             }
 
             val open = PendingIntent.getActivity(
