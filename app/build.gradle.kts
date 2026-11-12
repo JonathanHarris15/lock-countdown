@@ -15,7 +15,19 @@ android {
         versionName = "1.1"
     }
 
+    signingConfigs {
+        create("fixed") {
+            storeFile = file("countdown.keystore")
+            storePassword = "countdown"
+            keyAlias = "countdown"
+            keyPassword = "countdown"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("fixed")
+        }
         release {
             isMinifyEnabled = false
         }
