@@ -13,7 +13,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val text = TextView(this).apply {
+        val info = TextView(this).apply {
             textSize = 16f
             text = "Lock screen: long-press your lock screen (or swipe to the widget hub), " +
                 "tap add widget, and pick \"Countdown\".\n\n" +
@@ -32,7 +32,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(64, 64, 64, 64)
-            addView(text)
+            addView(info)
             addView(pin)
         })
         CountdownWidget.refresh(this)
