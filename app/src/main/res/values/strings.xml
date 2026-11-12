@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Countdown</string>
+    <string name="widget_description">Days, hours, minutes and seconds until May 17, 4:30 PM</string>
+</resources>
