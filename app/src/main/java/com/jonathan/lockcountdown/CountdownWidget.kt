@@ -67,8 +67,8 @@ class CountdownWidget : AppWidgetProvider() {
             } else {
                 val zone = Countdown.TARGET.zone
                 val nowZ = Instant.ofEpochMilli(now).atZone(zone)
-                // Calendar days until May 17: same number all day, flips at midnight.
-                val days = ChronoUnit.DAYS.between(nowZ.toLocalDate(), Countdown.TARGET.toLocalDate())
+                // Full days left, counted on the Central clock: flips at 4:30 PM every day.
+                val days = ChronoUnit.DAYS.between(nowZ, Countdown.TARGET)
                 // Clock counts down to the next 4:30 PM.
                 var nextTime = nowZ.toLocalDate().atTime(Countdown.TARGET.toLocalTime()).atZone(zone)
                 if (!nextTime.isAfter(nowZ)) nextTime = nextTime.plusDays(1)
@@ -76,7 +76,6 @@ class CountdownWidget : AppWidgetProvider() {
                 val hours = (nextTimeMillis - now) / HOUR
                 // Moment the hour digit drops by one.
                 val nextBoundary = nextTimeMillis - hours * HOUR
-                val midnight = nowZ.toLocalDate().plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
                 val base = SystemClock.elapsedRealtime() + (nextBoundary - now)
 
                 views.setViewVisibility(R.id.counter, View.VISIBLE)
@@ -87,7 +86,7 @@ class CountdownWidget : AppWidgetProvider() {
                 views.setChronometer(R.id.chrono, base, "%02d:%%s".format(hours), true)
                 views.setChronometerCountDown(R.id.chrono, true)
 
-                scheduleAlarm(context, minOf(nextBoundary, midnight) + 250)
+                scheduleAlarm(context, nextBoundary + 250)
             }
 
             val open = PendingIntent.getActivity(
